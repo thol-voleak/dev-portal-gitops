@@ -7,4 +7,4 @@ resources:
 images:
   # Updated by Dev Portal release management
   - name: traefik/whoami
-    newTag: v1.10.2
+    newTag: v1.10.3
