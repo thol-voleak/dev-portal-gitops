@@ -1,0 +1,33 @@
+# One Argo CD Application per deployment overlay: apps/<namespace>/<deployment>/overlays/<env>
+# Bootstrap once with: kubectl apply -n argocd -f argocd/applicationset.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: dev-portal-releases
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/thol-voleak/dev-portal-gitops.git
+        revision: main
+        directories:
+          - path: apps/*/*/overlays/*
+  template:
+    metadata:
+      name: '{{index .path.segments 2}}-{{.path.basename}}'
+      labels:
+        env: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/thol-voleak/dev-portal-gitops.git
+        targetRevision: main
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{index .path.segments 1}}-{{.path.basename}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]
